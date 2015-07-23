@@ -40,12 +40,8 @@ class beanstalkd::params {
     default => 'beanstalkd',
   }
 
-  $config_dir = $::operatingsystem ? {
-    default => '/etc/beanstalkd',
-  }
-
-  $config_file = $::operatingsystem ? {
-    default => '/etc/beanstalkd/beanstalkd.conf',
+  $config_file_init = $::operatingsystem ? {
+    default => '/etc/init.d/beanstalkd',
   }
 
   $config_file_mode = $::operatingsystem ? {
@@ -60,7 +56,7 @@ class beanstalkd::params {
     default => 'root',
   }
 
-  $config_file_init = $::operatingsystem ? {
+  $config_file = $::operatingsystem ? {
     /(?i:Debian|Ubuntu|Mint)/ => '/etc/default/beanstalkd',
     default                   => '/etc/sysconfig/beanstalkd',
   }
@@ -70,7 +66,7 @@ class beanstalkd::params {
   }
 
   $data_dir = $::operatingsystem ? {
-    default => '/etc/beanstalkd',
+    default => '/var/lib/beanstalkd',
   }
 
   $log_dir = $::operatingsystem ? {
@@ -81,7 +77,7 @@ class beanstalkd::params {
     default => '/var/log/beanstalkd/beanstalkd.log',
   }
 
-  $port = '42'
+  $port = '11300'
   $protocol = 'tcp'
 
   # General Settings

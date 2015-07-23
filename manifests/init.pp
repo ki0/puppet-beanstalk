@@ -18,18 +18,6 @@
 #   If defined, beanstalkd main config file will have the param: source => $source
 #   Can be defined also by the (top scope) variable $beanstalkd_source
 #
-# [*source_dir*]
-#   If defined, the whole beanstalkd configuration directory content is retrieved
-#   recursively from the specified source
-#   (source => $source_dir , recurse => true)
-#   Can be defined also by the (top scope) variable $beanstalkd_source_dir
-#
-# [*source_dir_purge*]
-#   If set to true (default false) the existing configuration directory is
-#   mirrored with the content retrieved from source_dir
-#   (source => $source_dir , recurse => true , purge => true)
-#   Can be defined also by the (top scope) variable $beanstalkd_source_dir_purge
-#
 # [*template*]
 #   Sets the path to the template to use as content for main configuration file
 #   If defined, beanstalkd main config file has: content => content("$template")
@@ -155,9 +143,6 @@
 # [*process_user*]
 #   The name of the user beanstalkd runs with. Used by puppi and monitor.
 #
-# [*config_dir*]
-#   Main configuration directory. Used by puppi
-#
 # [*config_file*]
 #   Main configuration file path
 #
@@ -202,8 +187,6 @@
 class beanstalkd (
   $my_class            = params_lookup( 'my_class' ),
   $source              = params_lookup( 'source' ),
-  $source_dir          = params_lookup( 'source_dir' ),
-  $source_dir_purge    = params_lookup( 'source_dir_purge' ),
   $template            = params_lookup( 'template' ),
   $service_autorestart = params_lookup( 'service_autorestart' , 'global' ),
   $options             = params_lookup( 'options' ),
@@ -229,7 +212,6 @@ class beanstalkd (
   $process             = params_lookup( 'process' ),
   $process_args        = params_lookup( 'process_args' ),
   $process_user        = params_lookup( 'process_user' ),
-  $config_dir          = params_lookup( 'config_dir' ),
   $config_file         = params_lookup( 'config_file' ),
   $config_file_mode    = params_lookup( 'config_file_mode' ),
   $config_file_owner   = params_lookup( 'config_file_owner' ),
@@ -243,7 +225,6 @@ class beanstalkd (
   $protocol            = params_lookup( 'protocol' )
   ) inherits beanstalkd::params {
 
-  $bool_source_dir_purge=any2bool($source_dir_purge)
   $bool_service_autorestart=any2bool($service_autorestart)
   $bool_absent=any2bool($absent)
   $bool_disable=any2bool($disable)
@@ -356,24 +337,6 @@ class beanstalkd (
     noop    => $beanstalkd::bool_noops,
   }
 
-  # The whole beanstalkd configuration directory can be recursively overriden
-  if $beanstalkd::source_dir {
-    file { 'beanstalkd.dir':
-      ensure  => directory,
-      path    => $beanstalkd::config_dir,
-      require => Package[$beanstalkd::package],
-      notify  => $beanstalkd::manage_service_autorestart,
-      source  => $beanstalkd::source_dir,
-      recurse => true,
-      purge   => $beanstalkd::bool_source_dir_purge,
-      force   => $beanstalkd::bool_source_dir_purge,
-      replace => $beanstalkd::manage_file_replace,
-      audit   => $beanstalkd::manage_audit,
-      noop    => $beanstalkd::bool_noops,
-    }
-  }
-
-
   ### Include custom class if $my_class is set
   if $beanstalkd::my_class {
     include $beanstalkd::my_class
@@ -446,6 +409,11 @@ class beanstalkd (
       content => inline_template('<%= scope.to_hash.reject { |k,v| k.to_s =~ /(uptime.*|path|timestamp|free|.*password.*|.*psk.*|.*key)/ }.to_yaml %>'),
       noop    => $beanstalkd::bool_noops,
     }
+  }
+
+  ### More than one instance of server
+  if $beanstalkd::instance {
+     create_resource(beanstalkd::instance, $instance)
   }
 
 }
