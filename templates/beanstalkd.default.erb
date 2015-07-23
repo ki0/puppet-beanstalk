@@ -1,0 +1,7 @@
+# File Managed by Puppet
+
+ulimit -n 128000
+BEANSTALKD_LISTEN_ADDR=0.0.0.0
+BEANSTALKD_LISTEN_PORT=<%= scope.lookupvar('beanstalkd::port') %>
+DAEMON_OPTS="-l $BEANSTALKD_LISTEN_ADDR -p $BEANSTALKD_LISTEN_PORT"
+START=yes
